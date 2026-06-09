@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Edu — 음악 감상 교육 플랫폼</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #f5f5f0; --bg2: #ffffff; --bg3: #eeede8;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --text: #1a1a1a; --text2: #666; --text3: #999;
+    --radius: 8px; --radius-lg: 12px;
+    --purple: #534AB7; --purple-light: #EEEDFE; --purple-dark: #3C3489; --purple-text: #3C3489;
+    --teal: #0F6E56; --teal-light: #E1F5EE; --teal-text: #085041;
+    --amber-light: #FAEEDA; --amber-text: #633806;
+    --coral-light: #FAECE7; --coral: #993C1D;
+    --green-light: #EAF3DE; --green-text: #27500A;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); min-height: 100vh; }
+
+  .toast-bar { background: var(--purple); color: #EEEDFE; padding: 0 16px; font-size: 13px; text-align: center; max-height: 0; overflow: hidden; transition: max-height 0.25s, padding 0.25s; position: sticky; top: 0; z-index: 100; }
+  .toast-bar.show { max-height: 38px; padding: 9px 16px; }
+
+  .screen { display: none; } .screen.active { display: block; }
+  .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.2rem; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; color: var(--text); font-size: 13px; cursor: pointer; font-family: var(--font); transition: background .12s; }
+  .btn:hover { background: var(--bg3); }
+  .btn.pri { background: var(--purple); border-color: var(--purple); color: #EEEDFE; }
+  .btn.pri:hover { background: var(--purple-dark); }
+  .btn.suc { background: var(--teal); border-color: var(--teal); color: #E1F5EE; }
+  .btn.suc:hover { background: var(--teal-text); }
+  .btn.dan { background: var(--coral); border-color: var(--coral); color: var(--coral-light); }
+  input, textarea, select { width: 100%; padding: 8px 11px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text); font-size: 13px; font-family: var(--font); outline: none; }
+  input:focus, textarea:focus, select:focus { border-color: var(--purple); }
+  textarea { resize: vertical; min-height: 90px; }
+  label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 3px; }
+  .fg { margin-bottom: 12px; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: var(--radius); font-size: 11px; font-weight: 500; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .sc { background: var(--bg3); border-radius: var(--radius); padding: .85rem; text-align: center; }
+  .sc .n { font-size: 22px; font-weight: 600; color: var(--text); }
+  .sc .l { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .topbar { background: var(--bg2); border-bottom: 0.5px solid var(--border); padding: 10px 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+  .topbar h1 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 6px; color: var(--text); }
+  .ntabs { display: flex; gap: 3px; margin-bottom: 1rem; }
+  .ntab { padding: 6px 13px; border-radius: var(--radius); font-size: 13px; cursor: pointer; border: 0.5px solid transparent; color: var(--text2); }
+  .ntab:hover { background: var(--bg3); }
+  .ntab.active { background: var(--bg2); border-color: var(--border2); color: var(--text); font-weight: 500; }
+  .hp-bar { height: 7px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-top: 5px; }
+  .hp-fill { height: 100%; background: #1D9E75; border-radius: 4px; transition: width .5s; }
+  .xp-bar { height: 5px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .xp-fill { height: 100%; background: var(--purple); border-radius: 4px; transition: width .6s; }
+  .srow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .srow:last-child { border-bottom: none; }
+  .up-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius-lg); padding: 1.5rem; text-align: center; cursor: pointer; transition: background .12s; }
+  .up-zone:hover { background: var(--bg3); }
+  .fitem { display: flex; align-items: center; gap: 8px; padding: 7px 10px; background: var(--bg3); border-radius: var(--radius); margin-top: 6px; font-size: 13px; color: var(--text); }
+  .char-card { border: 2px solid transparent; transition: border-color .15s; cursor: pointer; text-align: center; padding: 12px 8px; border-radius: var(--radius-lg); }
+  .char-card:hover, .char-card.sel { border-color: var(--purple); }
+  .char-sprite { font-size: 36px; display: block; line-height: 1.3; }
+  .section-lv { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 10px; }
+
+  /* 오디오 플레이어 */
+  .mplayer { background: var(--bg3); border-radius: var(--radius-lg); padding: .85rem; margin-bottom: 8px; }
+  .mplayer-top { display: flex; align-items: center; gap: 10px; }
+  .mplayer-progress { margin-top: 8px; display: none; }
+  .mplayer-progress.show { display: block; }
+  .progress-bar { width: 100%; height: 4px; background: var(--border2); border-radius: 2px; cursor: pointer; position: relative; }
+  .progress-fill { height: 100%; background: var(--purple); border-radius: 2px; width: 0%; transition: width .2s linear; }
+  .time-row { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: var(--text3); }
+
+  /* 레벨업 모달 */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal-box { background: var(--bg2); border-radius: var(--radius-lg); padding: 2rem; text-align: center; max-width: 280px; width: 90%; transform: scale(0.9); transition: transform .2s; }
+  .modal-overlay.show .modal-box { transform: scale(1); }
+  .modal-sprite { font-size: 60px; animation: bounce 0.6s infinite alternate; display: block; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+
+  #page-login { padding: 2rem; }
+  #page-student, #page-teacher { padding: 0; }
+  #page-student .inner, #page-teacher .inner { padding: 1rem; }
+
+  @media (max-width: 600px) {
+    .g2 { grid-template-columns: 1fr; }
+    .g3 { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast-bar" id="toast-bar"></div>
+
+<!-- 레벨업 모달 -->
+<div class="modal-overlay" id="levelup-modal" onclick="closeLevelUp()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <span class="modal-sprite" id="lu-sprite">🧙</span>
+    <h2 style="font-size:20px;font-weight:700;color:var(--purple);margin-top:12px">레벨 업!</h2>
+    <p style="font-size:15px;font-weight:600;color:var(--text);margin-top:6px" id="lu-lv">Lv.2 달성</p>
+    <p style="font-size:13px;color:var(--text2);margin-top:6px" id="lu-msg">감상 능력이 향상되었습니다!</p>
+    <button class="btn pri" style="margin-top:16px;width:100%;justify-content:center" onclick="closeLevelUp()">확인</button>
+  </div>
+</div>
+
+<!-- 로그인 -->
+<div id="page-login" class="screen active">
+  <div style="max-width:360px;margin:40px auto">
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div style="font-size:40px">🎵</div>
+      <h2 style="font-size:20px;font-weight:600;color:var(--text);margin-top:8px">Music Edu</h2>
+      <p style="font-size:13px;color:var(--text2);margin-top:4px">음악 감상 교육 플랫폼</p>
+    </div>
+    <div class="card">
+      <div style="display:flex;gap:6px;margin-bottom:1.2rem">
+        <button class="btn" id="lt-s" style="flex:1;justify-content:center" onclick="setRole('student')">
+          <i class="ti ti-user"></i> 학생
+        </button>
+        <button class="btn pri" id="lt-t" style="flex:1;justify-content:center" onclick="setRole('teacher')">
+          <i class="ti ti-school"></i> 선생님
+        </button>
+      </div>
+      <div class="fg"><label>아이디</label><input id="lid" placeholder="아이디 입력" value="demo"></div>
+      <div class="fg"><label>비밀번호</label><input type="password" id="lpw" placeholder="비밀번호 입력" value="1234" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn pri" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">
+        <i class="ti ti-login"></i> 로그인
+      </button>
+      <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">demo / 1234 · 역할을 먼저 선택하세요</p>
+    </div>
+  </div>
+</div>
+
+<!-- 캐릭터 생성 -->
+<div id="page-char" class="screen">
+  <div class="topbar">
+    <h1><i class="ti ti-sword"></i> 캐릭터 생성</h1>
+    <button class="btn" onclick="goLogout()" style="padding:4px 9px;font-size:12px"><i class="ti ti-logout"></i> 로그아웃</button>
+  </div>
+  <div style="max-width:500px;margin:1.5rem auto;padding:0 1rem">
+    <div class="card">
+      <div class="fg"><label>캐릭터 이름</label><input id="cname" value="음악탐험가"></div>
+      <p class="section-lv" style="margin-top:4px">캐릭터 선택</p>
+      <div class="g3">
+        <div class="card char-card sel" id="cc0" onclick="pickChar(0)"><span class="char-sprite">🧙</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">음악 마법사</p><p style="font-size:11px;color:var(--text2)">마법의 선율</p></div>
+        <div class="card char-card" id="cc1" onclick="pickChar(1)"><span class="char-sprite">🎸</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">록 전사</p><p style="font-size:11px;color:var(--text2)">강렬한 리듬</p></div>
+        <div class="card char-card" id="cc2" onclick="pickChar(2)"><span class="char-sprite">🎻</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">바이올린 요정</p><p style="font-size:11px;color:var(--text2)">우아한 음율</p></div>
+        <div class="card char-card" id="cc3" onclick="pickChar(3)"><span class="char-sprite">🥁</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">드럼 용사</p><p style="font-size:11px;color:var(--text2)">박동하는 심장</p></div>
+        <div class="card char-card" id="cc4" onclick="pickChar(4)"><span class="char-sprite">🎹</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">피아노 현자</p><p style="font-size:11px;color:var(--text2)">조화의 건반</p></div>
+        <div class="card char-card" id="cc5" onclick="pickChar(5)"><span class="char-sprite">🎷</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">재즈 유랑자</p><p style="font-size:11px;color:var(--text2)">자유로운 즉흥</p></div>
+      </div>
+      <button class="btn pri" style="width:100%;justify-content:center;margin-top:1rem" onclick="createChar()">
+        <i class="ti ti-check"></i> 생성하기
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 학생 홈 -->
+<div id="page-student" class="screen">
+  <div class="topbar">
+    <h1><i class="ti ti-music"></i> Music Edu</h1>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="badge" id="st-badge" style="background:var(--teal-light);color:var(--teal-text)">학생</span>
+      <button class="btn" onclick="goLogout()" style="padding:4px 9px;font-size:12px"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+  <div class="inner">
+    <div class="ntabs">
+      <div class="ntab active" onclick="stTab('char',this)">내 캐릭터</div>
+      <div class="ntab" onclick="stTab('music',this)">음악 감상</div>
+      <div class="ntab" onclick="stTab('review',this)">감상문 제출</div>
+    </div>
+
+    <!-- 학생 · 내 캐릭터 -->
+    <div id="st-char">
+      <div class="g2">
+        <div class="card" style="text-align:center">
+          <span id="st-sprite" style="font-size:52px;display:block">🧙</span>
+          <p style="font-size:15px;font-weight:600;margin-top:8px;color:var(--text)" id="st-cname">음악탐험가</p>
+          <p style="font-size:12px;color:var(--text2)">Lv.<span id="st-lv">1</span> <span id="st-class">음악 마법사</span></p>
+          <div style="margin-top:12px;text-align:left">
+            <div style="font-size:11px;color:var(--text2)">HP</div>
+            <div class="hp-bar"><div class="hp-fill" id="st-hpfill" style="width:80%"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px">
+              <span style="font-size:11px;color:var(--text2)">EXP <span id="st-exp">0</span>/<span id="st-expmax">1000</span></span>
+              <span style="font-size:11px;color:var(--purple)"><span id="st-exppc">0</span>%</span>
+            </div>
+            <div class="xp-bar"><div class="xp-fill" id="st-xpfill" style="width:0%"></div></div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+            <span class="badge" style="background:var(--purple-light);color:var(--purple-text)">공격력 <span id="st-atk">10</span></span>
+            <span class="badge" style="background:var(--teal-light);color:var(--teal-text)">방어력 <span id="st-def">8</span></span>
+          </div>
+        </div>
+        <div>
+          <div class="g2" style="margin-bottom:10px">
+            <div class="sc"><div class="n" id="st-nsub">0</div><div class="l">제출한 감상문</div></div>
+            <div class="sc"><div class="n" id="st-avg">—</div><div class="l">평균 점수</div></div>
+          </div>
+          <div class="card">
+            <p class="section-lv" style="margin-bottom:8px">최근 점수</p>
+            <div id="score-history"><p style="font-size:12px;color:var(--text3)">아직 채점된 감상문이 없습니다.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 학생 · 음악 감상 -->
+    <div id="st-music" style="display:none">
+      <div class="card">
+        <p class="section-lv">수업 음악 목록</p>
+        <div id="st-music-list"><p style="font-size:12px;color:var(--text3)">선생님이 등록한 음악이 없습니다.</p></div>
+      </div>
+    </div>
+
+    <!-- 학생 · 감상문 제출 -->
+    <div id="st-review" style="display:none">
+      <div class="card">
+        <p class="section-lv">감상문 제출</p>
+        <div class="fg">
+          <label>곡 선택</label>
+          <select id="rv-song"></select>
+        </div>
+        <div class="fg"><label>감상문 제목</label><input id="rv-title" placeholder="감상문 제목을 입력하세요"></div>
+        <div class="fg">
+          <label>감상문 내용 <span style="font-size:11px;color:var(--text3)">(최소 20자)</span></label>
+          <textarea id="rv-txt" placeholder="음악을 들으며 느낀 점, 인상적인 부분, 음악적 특징 등을 자유롭게 작성해 주세요."></textarea>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:12px;color:var(--text2)" id="rv-cnt">0자</span>
+          <button class="btn suc" onclick="submitRv()"><i class="ti ti-send"></i> 선생님께 제출</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 선생님 대시보드 -->
+<div id="page-teacher" class="screen">
+  <div class="topbar">
+    <h1><i class="ti ti-music"></i> Music Edu</h1>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="badge" style="background:var(--purple-light);color:var(--purple-text)">선생님</span>
+      <button class="btn" onclick="goLogout()" style="padding:4px 9px;font-size:12px"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+  <div class="inner">
+    <div class="ntabs">
+      <div class="ntab active" onclick="tcTab('dash',this)">대시보드</div>
+      <div class="ntab" onclick="tcTab('upload',this)">음악 관리</div>
+      <div class="ntab" onclick="tcTab('grade',this)">채점</div>
+      <div class="ntab" onclick="tcTab('stulist',this)">학생 현황</div>
+    </div>
+
+    <!-- 선생님 · 대시보드 -->
+    <div id="tc-dash">
+      <div class="g3" style="margin-bottom:1rem">
+        <div class="sc"><div class="n" id="tc-stucount">0</div><div class="l">전체 학생 수</div></div>
+        <div class="sc"><div class="n" id="tc-ungraded">0</div><div class="l">미채점 감상문</div></div>
+        <div class="sc"><div class="n" id="tc-musiccount">0</div><div class="l">등록된 음악</div></div>
+      </div>
+      <div class="card">
+        <p class="section-lv">최근 제출된 감상문</p>
+        <div id="tc-recent-list"><p style="font-size:12px;color:var(--text3)">아직 제출된 감상문이 없습니다.</p></div>
+      </div>
+    </div>
+
+    <!-- 선생님 · 음악 관리 -->
+    <div id="tc-upload" style="display:none">
+      <div class="card" style="margin-bottom:12px">
+        <p class="section-lv">음악 파일 업로드</p>
+        <div class="up-zone" onclick="document.getElementById('file-input').click()">
+          <i class="ti ti-music-plus" style="font-size:26px;color:var(--text2)"></i>
+          <p style="font-size:13px;color:var(--text2);margin-top:6px">수업용 음악 업로드</p>
+          <p style="font-size:11px;color:var(--text3);margin-top:3px">MP3 / WAV / OGG · 최대 50MB</p>
+        </div>
+        <input type="file" id="file-input" accept="audio/*" multiple style="display:none" onchange="handleUpload(this)">
+      </div>
+      <div class="card">
+        <p class="section-lv">등록된 음악 목록</p>
+        <div id="tc-music-list"><p style="font-size:12px;color:var(--text3)">아직 등록된 음악이 없습니다.</p></div>
+      </div>
+    </div>
+
+    <!-- 선생님 · 채점 -->
+    <div id="tc-grade" style="display:none">
+      <div class="card">
+        <p class="section-lv">감상문 채점</p>
+        <div id="tc-grade-list"><p style="font-size:12px;color:var(--text3)">채점할 감상문이 없습니다.</p></div>
+      </div>
+    </div>
+
+    <!-- 선생님 · 학생 현황 -->
+    <div id="tc-stulist" style="display:none">
+      <div class="card">
+        <p class="section-lv">학생 캐릭터 성장 현황</p>
+        <div id="tc-stu-list"><p style="font-size:12px;color:var(--text3)">등록된 학생이 없습니다.</p></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 숨겨진 오디오 엘리먼트 -->
+<audio id="audio-player" preload="none"></audio>
+
+<script>
+// ── 상수 ──
+const SPRITES = ['🧙','🎸','🎻','🥁','🎹','🎷'];
+const CLASSES  = ['음악 마법사','록 전사','바이올린 요정','드럼 용사','피아노 현자','재즈 유랑자'];
+const LV_MSGS  = ['','음악의 세계에 첫 발을 내딛었습니다!','감상 능력이 향상되었습니다!','음악의 깊이를 이해하기 시작했습니다!','진정한 음악 감상가로 성장했습니다!'];
+const LV_THRESHOLDS = [0, 1000, 2500, 4500, 7000];
+
+// ── 공유 상태 (단일 HTML이므로 같은 메모리 공간) ──
+const db = {
+  role: 'teacher',
+  selChar: 0,
+  charDone: false,
+  student: { name: '음악탐험가', sprite: '🧙', charClass: '음악 마법사', lv: 1, exp: 0, submissions: [] },
+  musicList: [],          // { id, name, src(objectURL), date }
+  reviews: [],            // { id, studentName, sprite, musicName, title, content, time, score, feedback, graded }
+  nextId: 1,
+  audio: { currentId: null, timer: null }
+};
+
+// ── 토스트 ──
+function toast(msg, ms = 2500) {
+  const b = document.getElementById('toast-bar');
+  b.textContent = msg;
+  b.classList.add('show');
+  clearTimeout(b._t);
+  b._t = setTimeout(() => b.classList.remove('show'), ms);
+}
+
+// ── 페이지 전환 ──
+function showPage(pid) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('page-' + pid);
+  if (el) el.classList.add('active');
+}
+
+// ── 로그인 ──
+function setRole(r) {
+  db.role = r;
+  document.getElementById('lt-s').classList.toggle('pri', r === 'student');
+  document.getElementById('lt-t').classList.toggle('pri', r === 'teacher');
+}
+setRole('teacher');
+
+function doLogin() {
+  const pw = document.getElementById('lpw').value;
+  if (pw !== '1234') { toast('비밀번호를 확인하세요 (1234)'); return; }
+  if (db.role === 'teacher') {
+    renderTeacherDash();
+    showPage('teacher');
+    toast('선생님으로 로그인되었습니다 ✓');
+  } else {
+    if (!db.charDone) { showPage('char'); toast('캐릭터를 먼저 만들어 주세요 🎮'); }
+    else { renderStudentPage(); showPage('student'); toast('로그인 성공 ✓'); }
+  }
+}
+
+// ── 캐릭터 생성 ──
+function pickChar(idx) {
+  db.selChar = idx;
+  document.querySelectorAll('.char-card').forEach((c, i) => c.classList.toggle('sel', i === idx));
+}
+
+function createChar() {
+  const nm = document.getElementById('cname').value.trim() || '음악탐험가';
+  db.charDone = true;
+  db.student.name = nm;
+  db.student.sprite = SPRITES[db.selChar];
+  db.student.charClass = CLASSES[db.selChar];
+  db.student.lv = 1;
+  db.student.exp = 0;
+  renderStudentPage();
+  showPage('student');
+  toast('캐릭터 생성 완료! 🎉');
+}
+
+// ── EXP / 레벨 계산 ──
+function calcLv(exp) {
+  let lv = 1;
+  for (let i = LV_THRESHOLDS.length - 1; i >= 1; i--) {
+    if (exp >= LV_THRESHOLDS[i]) { lv = i + 1; break; }
+  }
+  return Math.min(lv, 5);
+}
+function expForLv(lv) { return LV_THRESHOLDS[Math.min(lv - 1, LV_THRESHOLDS.length - 1)]; }
+function expForNextLv(lv) { return lv >= 5 ? LV_THRESHOLDS[4] + 3000 : LV_THRESHOLDS[lv]; }
+
+function addExp(amount) {
+  const oldLv = db.student.lv;
+  db.student.exp += amount;
+  const newLv = calcLv(db.student.exp);
+  db.student.lv = newLv;
+  if (newLv > oldLv) showLevelUp(newLv);
+  renderStudentStats();
+}
+
+// ── 레벨업 모달 ──
+function showLevelUp(lv) {
+  document.getElementById('lu-sprite').textContent = db.student.sprite;
+  document.getElementById('lu-lv').textContent = `Lv.${lv} 달성!`;
+  document.getElementById('lu-msg').textContent = LV_MSGS[lv - 1] || '더욱 강해졌습니다!';
+  document.getElementById('levelup-modal').classList.add('show');
+}
+function closeLevelUp() {
+  document.getElementById('levelup-modal').classList.remove('show');
+}
+
+// ── 학생 화면 렌더링 ──
+function renderStudentPage() {
+  renderStudentStats();
+  renderStudentMusicList();
+  renderSongSelect();
+  renderScoreHistory();
+}
+
+function renderStudentStats() {
+  const s = db.student;
+  document.getElementById('st-sprite').textContent = s.sprite;
+  document.getElementById('st-cname').textContent = s.name;
+  document.getElementById('st-class').textContent = s.charClass;
+  document.getElementById('st-badge').textContent = s.name;
+  document.getElementById('st-lv').textContent = s.lv;
+  const needed = expForNextLv(s.lv);
+  const base = expForLv(s.lv);
+  const cur = s.exp - base;
+  const range = needed - base;
+  const pc = Math.min(Math.round((cur / range) * 100), 100);
+  document.getElementById('st-exp').textContent = cur;
+  document.getElementById('st-expmax').textContent = range;
+  document.getElementById('st-exppc').textContent = pc;
+  document.getElementById('st-xpfill').style.width = pc + '%';
+  const atk = 10 + (s.lv - 1) * 15;
+  const def = 8 + (s.lv - 1) * 12;
+  document.getElementById('st-atk').textContent = atk;
+  document.getElementById('st-def').textContent = def;
+  document.getElementById('st-nsub').textContent = s.submissions.length;
+  const graded = db.reviews.filter(r => r.studentName === s.name && r.graded);
+  if (graded.length > 0) {
+    const avg = Math.round(graded.reduce((a, b) => a + b.score, 0) / graded.length);
+    document.getElementById('st-avg').textContent = avg + '점';
+  } else {
+    document.getElementById('st-avg').textContent = '—';
+  }
+}
+
+function renderScoreHistory() {
+  const s = db.student;
+  const graded = db.reviews.filter(r => r.studentName === s.name && r.graded).slice(-5).reverse();
+  const el = document.getElementById('score-history');
+  if (graded.length === 0) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3)">아직 채점된 감상문이 없습니다.</p>';
+    return;
+  }
+  el.innerHTML = graded.map(r => `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:12px">
+      <span style="color:var(--text2)">${r.musicName}</span>
+      <span class="badge" style="background:var(--amber-light);color:var(--amber-text)">${r.score}점</span>
+    </div>
+  `).join('');
+}
+
+function renderStudentMusicList() {
+  const el = document.getElementById('st-music-list');
+  if (db.musicList.length === 0) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3)">선생님이 등록한 음악이 없습니다.</p>';
+    return;
+  }
+  el.innerHTML = db.musicList.map(m => buildPlayerHTML(m, false)).join('');
+}
+
+function renderSongSelect() {
+  const sel = document.getElementById('rv-song');
+  sel.innerHTML = db.musicList.length === 0
+    ? '<option>등록된 음악이 없습니다</option>'
+    : db.musicList.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
+
+// ── 오디오 플레이어 ──
+const audio = document.getElementById('audio-player');
+
+function buildPlayerHTML(m, isTeacher) {
+  const colors = ['var(--purple-light)/var(--purple)', 'var(--teal-light)/var(--teal)', 'var(--coral-light)/var(--coral)'];
+  const ci = db.musicList.indexOf(m) % 3;
+  const [bg, fg] = colors[ci].split('/');
+  const delBtn = isTeacher ? `<button class="btn dan" onclick="delMusic(${m.id})" style="padding:5px 10px"><i class="ti ti-trash"></i></button>` : '';
+  return `
+    <div class="mplayer" id="mpl-${m.id}">
+      <div class="mplayer-top">
+        <div style="width:38px;height:38px;border-radius:var(--radius);background:${bg};display:flex;align-items:center;justify-content:center"><i class="ti ti-music" style="color:${fg};font-size:18px"></i></div>
+        <div style="flex:1"><p style="font-size:13px;font-weight:500;color:var(--text)">${m.name}</p><p style="font-size:11px;color:var(--text2)">${m.date}</p></div>
+        ${isTeacher ? `<button class="btn" onclick="tplay(${m.id})" id="pbtn-${m.id}" style="padding:5px 10px;margin-right:6px"><i class="ti ti-player-play"></i></button>` : `<button class="btn" onclick="tplay(${m.id})" id="pbtn-${m.id}" style="padding:5px 10px"><i class="ti ti-player-play"></i></button>`}
+        ${delBtn}
+      </div>
+      <div class="mplayer-progress" id="prog-${m.id}">
+        <div class="progress-bar" onclick="seekAudio(event,${m.id})"><div class="progress-fill" id="pfill-${m.id}"></div></div>
+        <div class="time-row"><span id="ptime-${m.id}">0:00</span><span id="pdur-${m.id}">—</span></div>
+      </div>
+    </div>`;
+}
+
+function tplay(id) {
+  const m = db.musicList.find(x => x.id === id);
+  if (!m) return;
+
+  if (db.audio.currentId === id && !audio.paused) {
+    audio.pause();
+    setPlayBtn(id, false);
+    return;
+  }
+
+  if (db.audio.currentId && db.audio.currentId !== id) {
+    stopPlayer(db.audio.currentId);
+  }
+
+  db.audio.currentId = id;
+  if (m.src) {
+    audio.src = m.src;
+    audio.play().catch(() => toast('재생 오류: 파일을 확인하세요'));
+    setPlayBtn(id, true);
+    showProgress(id, true);
+    startProgressTimer(id);
+  } else {
+    toast('▶ 재생 중... (파일 업로드 시 실제 재생됩니다)');
+    setPlayBtn(id, true);
+    showProgress(id, true);
+    simulateProgress(id);
+  }
+}
+
+function stopPlayer(id) {
+  audio.pause();
+  setPlayBtn(id, false);
+  clearInterval(db.audio.timer);
+  const fill = document.getElementById('pfill-' + id);
+  if (fill) fill.style.width = '0%';
+}
+
+function setPlayBtn(id, playing) {
+  const btn = document.getElementById('pbtn-' + id);
+  if (!btn) return;
+  const ic = btn.querySelector('i');
+  ic.className = playing ? 'ti ti-player-pause' : 'ti ti-player-play';
+}
+
+function showProgress(id, show) {
+  const el = document.getElementById('prog-' + id);
+  if (el) el.classList.toggle('show', show);
+}
+
+function startProgressTimer(id) {
+  clearInterval(db.audio.timer);
+  db.audio.timer = setInterval(() => {
+    if (audio.paused) { clearInterval(db.audio.timer); setPlayBtn(id, false); return; }
+    const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+    const fill = document.getElementById('pfill-' + id);
+    const tEl = document.getElementById('ptime-' + id);
+    const dEl = document.getElementById('pdur-' + id);
+    if (fill) fill.style.width = pct + '%';
+    if (tEl) tEl.textContent = fmt(audio.currentTime);
+    if (dEl) dEl.textContent = audio.duration ? fmt(audio.duration) : '—';
+  }, 300);
+}
+
+function simulateProgress(id) {
+  clearInterval(db.audio.timer);
+  let pct = 0;
+  db.audio.timer = setInterval(() => {
+    pct += 0.4;
+    const fill = document.getElementById('pfill-' + id);
+    if (fill) fill.style.width = Math.min(pct, 100) + '%';
+    if (pct >= 100) { clearInterval(db.audio.timer); setPlayBtn(id, false); }
+  }, 200);
+}
+
+function seekAudio(e, id) {
+  if (!audio.duration) return;
+  const bar = e.currentTarget;
+  const ratio = e.offsetX / bar.offsetWidth;
+  audio.currentTime = ratio * audio.duration;
+}
+
+function fmt(s) {
+  const m = Math.floor(s / 60);
+  const ss = Math.floor(s % 60).toString().padStart(2, '0');
+  return `${m}:${ss}`;
+}
+
+audio.addEventListener('ended', () => {
+  if (db.audio.currentId) { setPlayBtn(db.audio.currentId, false); db.audio.currentId = null; }
+});
+
+// ── 파일 업로드 ──
+function handleUpload(input) {
+  const files = Array.from(input.files);
+  files.forEach(f => {
+    if (f.size > 50 * 1024 * 1024) { toast(`${f.name}: 파일이 너무 큽니다 (최대 50MB)`); return; }
+    const src = URL.createObjectURL(f);
+    const name = f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+    const today = new Date();
+    const date = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')} 등록`;
+    db.musicList.push({ id: db.nextId++, name, src, date });
+    toast(`"${name}" 업로드 완료 ✓`);
+  });
+  input.value = '';
+  renderTeacherMusicList();
+  renderStudentMusicList();
+  renderSongSelect();
+  updateDashCounts();
+}
+
+// ── 음악 삭제 ──
+function delMusic(id) {
+  if (!confirm('이 음악을 삭제하시겠습니까?')) return;
+  const m = db.musicList.find(x => x.id === id);
+  if (m && m.src) URL.revokeObjectURL(m.src);
+  db.musicList = db.musicList.filter(x => x.id !== id);
+  if (db.audio.currentId === id) { audio.pause(); db.audio.currentId = null; }
+  renderTeacherMusicList();
+  renderStudentMusicList();
+  renderSongSelect();
+  updateDashCounts();
+  toast('음악이 삭제되었습니다');
+}
+
+// ── 선생님 음악 목록 ──
+function renderTeacherMusicList() {
+  const el = document.getElementById('tc-music-list');
+  if (db.musicList.length === 0) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3)">아직 등록된 음악이 없습니다.</p>';
+    return;
+  }
+  el.innerHTML = db.musicList.map(m => buildPlayerHTML(m, true)).join('');
+}
+
+// ── 감상문 제출 ──
+document.getElementById('rv-txt').addEventListener('input', function() {
+  document.getElementById('rv-cnt').textContent = this.value.length + '자';
+});
+
+function submitRv() {
+  const txt = document.getElementById('rv-txt').value.trim();
+  const title = document.getElementById('rv-title').value.trim();
+  const sel = document.getElementById('rv-song');
+  if (db.musicList.length === 0) { toast('수업 음악이 없습니다. 선생님께 문의하세요'); return; }
+  if (!title) { toast('제목을 입력하세요'); return; }
+  if (txt.length < 20) { toast('감상문을 20자 이상 작성해주세요'); return; }
+  const musicId = parseInt(sel.value);
+  const music = db.musicList.find(m => m.id === musicId);
+  const musicName = music ? music.name : sel.options[sel.selectedIndex]?.text || '';
+  const s = db.student;
+  const review = {
+    id: db.nextId++, studentName: s.name, sprite: s.sprite,
+    musicName, title, content: txt,
+    time: new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'}),
+    score: null, feedback: '', graded: false
+  };
+  db.reviews.push(review);
+  s.submissions.push(review.id);
+  document.getElementById('rv-txt').value = '';
+  document.getElementById('rv-title').value = '';
+  document.getElementById('rv-cnt').textContent = '0자';
+  addExp(30);
+  renderStudentStats();
+  renderTeacherDash();
+  toast('감상문이 선생님께 제출되었습니다! 📨 (+30 EXP)');
+}
+
+// ── 선생님 채점 ──
+function renderGradeList() {
+  const el = document.getElementById('tc-grade-list');
+  const ungraded = db.reviews.filter(r => !r.graded);
+  if (ungraded.length === 0) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3)">채점할 감상문이 없습니다.</p>';
+    return;
+  }
+  el.innerHTML = ungraded.map(r => `
+    <div id="gi-${r.id}" style="border-left:2px solid var(--purple);padding-left:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:22px">${r.sprite}</span>
+        <div>
+          <p style="font-size:13px;font-weight:500;color:var(--text)">${r.studentName} — ${r.musicName}</p>
+          <p style="font-size:11px;color:var(--text2)">제목: ${r.title} · ${r.time}</p>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text2);background:var(--bg3);padding:8px;border-radius:var(--radius);line-height:1.6;margin-bottom:8px">${r.content}</p>
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+        <label style="margin:0;white-space:nowrap;font-size:12px">점수</label>
+        <input type="number" min="0" max="100" value="85" id="gs-${r.id}" style="width:55px;text-align:center">
+        <span style="font-size:12px;color:var(--text2)">점</span>
+        <input id="gf-${r.id}" placeholder="피드백 메시지" style="flex:1;min-width:120px">
+        <button class="btn suc" style="white-space:nowrap;padding:6px 10px" onclick="saveGrade(${r.id})"><i class="ti ti-check"></i> 저장</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function saveGrade(rid) {
+  const sc = parseInt(document.getElementById('gs-' + rid).value);
+  const fb = document.getElementById('gf-' + rid).value.trim();
+  if (isNaN(sc) || sc < 0 || sc > 100) { toast('점수는 0~100 사이로 입력하세요'); return; }
+  const r = db.reviews.find(x => x.id === rid);
+  if (!r) return;
+  r.score = sc;
+  r.feedback = fb;
+  r.graded = true;
+  const gi = document.getElementById('gi-' + rid);
+  if (gi) gi.style.borderLeftColor = '#1D9E75';
+
+  // 학생 EXP 지급 (같은 메모리이므로 직접 반영)
+  const expGain = Math.round(sc * 0.8);
+  if (r.studentName === db.student.name) {
+    addExp(expGain);
+    renderScoreHistory();
+  }
+  toast(`${r.studentName} — ${sc}점 저장! EXP +${expGain} 지급 ✓`);
+  setTimeout(() => renderGradeList(), 600);
+  updateDashCounts();
+  renderTeacherDash();
+  renderStuList();
+}
+
+// ── 선생님 대시보드 ──
+function renderTeacherDash() {
+  updateDashCounts();
+  const el = document.getElementById('tc-recent-list');
+  const recent = db.reviews.slice(-5).reverse();
+  if (recent.length === 0) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3)">아직 제출된 감상문이 없습니다.</p>';
+    return;
+  }
+  el.innerHTML = recent.map(r => `
+    <div class="srow">
+      <span style="font-size:24px">${r.sprite}</span>
+      <div style="flex:1">
+        <p style="font-size:13px;font-weight:500;color:var(--text)">${r.studentName}</p>
+        <p style="font-size:11px;color:var(--text2)">${r.musicName} · ${r.time}</p>
+      </div>
+      ${r.graded
+        ? `<span class="badge" style="background:var(--green-light);color:var(--green-text)">채점완료</span>`
+        : `<span class="badge" style="background:var(--amber-light);color:var(--amber-text)">미채점</span>`}
+    </div>
+  `).join('');
+}
+
+function updateDashCounts() {
+  document.getElementById('tc-ungraded').textContent = db.reviews.filter(r => !r.graded).length;
+  document.getElementById('tc-musiccount').textContent = db.musicList.length;
+  document.getElementById('tc-stucount').textContent = db.charDone ? 1 : 0;
+}
+
+// ── 학생 현황 ──
+function renderStuList() {
+  const el = document.getElementById('tc-stu-list');
+  if (!db.charDone) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3)">등록된 학생이 없습니다.</p>';
+    return;
+  }
+  const s = db.student;
+  const base = expForLv(s.lv);
+  const next = expForNextLv(s.lv);
+  const cur = s.exp - base;
+  const range = next - base;
+  const pc = Math.min(Math.round((cur / range) * 100), 100);
+  const graded = db.reviews.filter(r => r.studentName === s.name && r.graded);
+  const avg = graded.length ? Math.round(graded.reduce((a, b) => a + b.score, 0) / graded.length) : null;
+  el.innerHTML = `
+    <div class="srow">
+      <span style="font-size:26px">${s.sprite}</span>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
+          <p style="font-size:13px;font-weight:500;color:var(--text)">${s.name}</p>
+          <span class="badge" style="background:var(--purple-light);color:var(--purple-text)">Lv.${s.lv}</span>
+          ${avg !== null ? `<span class="badge" style="background:var(--teal-light);color:var(--teal-text)">평균 ${avg}점</span>` : ''}
+        </div>
+        <div class="xp-bar" style="max-width:200px"><div class="xp-fill" style="width:${pc}%"></div></div>
+        <p style="font-size:11px;color:var(--text2);margin-top:2px">EXP ${cur}/${range}</p>
+      </div>
+    </div>`;
+}
+
+// ── 탭 전환 ──
+function stTab(tab, el) {
+  document.querySelectorAll('#page-student .ntab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['char','music','review'].forEach(t => {
+    document.getElementById('st-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+function tcTab(tab, el) {
+  document.querySelectorAll('#page-teacher .ntab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['dash','upload','grade','stulist'].forEach(t => {
+    document.getElementById('tc-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  if (tab === 'grade') renderGradeList();
+  if (tab === 'stulist') renderStuList();
+  if (tab === 'upload') renderTeacherMusicList();
+}
+
+// ── 로그아웃 ──
+function goLogout() {
+  if (db.audio.currentId) { audio.pause(); db.audio.currentId = null; }
+  showPage('login');
+  toast('로그아웃 되었습니다');
+}
+
+// 초기화
+updateDashCounts();
+</script>
+</body>
+</html>
