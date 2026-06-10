@@ -476,9 +476,10 @@ function setupStudent() {
     userProfile = p; renderStats(p);
     if ((p.lv || 1) > oldLv) showLevelUp(p.lv, p.sprite);
   }));
-  const q = query(collection(db, 'reviews'), where('studentUid','==',currentUser.uid), orderBy('submittedAt','desc'));
+  const q = query(collection(db, 'reviews'), where('studentUid','==',currentUser.uid));
   unsubscribers.push(onSnapshot(q, snap => {
-    const reviews = snap.docs.map(d => ({id:d.id,...d.data()}));
+    const reviews = snap.docs.map(d => ({id:d.id,...d.data()}))
+      .sort((a,b) => (b.submittedAt?.seconds||0) - (a.submittedAt?.seconds||0));
     document.getElementById('st-nsub').textContent = reviews.length;
     const graded = reviews.filter(r => r.graded);
     document.getElementById('st-avg').textContent = graded.length
@@ -633,7 +634,7 @@ function renderTeacherMusic(list) {
 async function loadGradeList() {
   const el = document.getElementById('tc-grade-list');
   el.innerHTML = '<p class="loading-txt">로딩 중...</p>';
-  const snap = await getDocs(query(collection(db,'reviews'), where('graded','==',false), orderBy('submittedAt','desc')));
+  const snap = await getDocs(query(collection(db,'reviews'), where('graded','==',false)));
   const list = snap.docs.map(d => ({id:d.id,...d.data()}));
   el.innerHTML = list.length === 0
     ? '<p class="empty">채점할 감상문이 없습니다.</p>'
