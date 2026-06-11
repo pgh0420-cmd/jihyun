@@ -97,7 +97,7 @@
 
 <!-- 로그인 -->
 <div id="page-login" class="screen active">
-  <div style="max-width:360px;margin:40px auto">
+  <div style="max-width:420px;margin:32px auto;padding:0 1rem">
     <div style="text-align:center;margin-bottom:1.5rem">
       <div style="font-size:40px">🎵</div>
       <h2 style="font-size:20px;font-weight:600;color:var(--text);margin-top:8px">Music Edu</h2>
@@ -105,31 +105,57 @@
     </div>
     <div class="card">
       <div style="display:flex;gap:6px;margin-bottom:1.2rem">
-        <button class="btn pri" id="tab-login" style="flex:1;justify-content:center" onclick="window.switchAuthTab('login')">로그인</button>
-        <button class="btn" id="tab-register" style="flex:1;justify-content:center" onclick="window.switchAuthTab('register')">회원가입</button>
-      </div>
-      <div id="form-login">
-        <div class="fg"><label>이메일</label><input id="l-email" type="email" placeholder="이메일 입력"></div>
-        <div class="fg"><label>비밀번호</label><input id="l-pw" type="password" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')window.doLogin()"></div>
-        <button class="btn pri" id="btn-login" style="width:100%;justify-content:center;margin-top:4px" onclick="window.doLogin()">
-          <i class="ti ti-login"></i> 로그인
+        <button class="btn pri" id="lt-stu" style="flex:1;justify-content:center" onclick="window.setLoginRole('student')">
+          <i class="ti ti-user"></i> 학생
+        </button>
+        <button class="btn" id="lt-tch" style="flex:1;justify-content:center" onclick="window.setLoginRole('teacher')">
+          <i class="ti ti-school"></i> 선생님
         </button>
       </div>
-      <div id="form-register" style="display:none">
-        <div style="display:flex;gap:6px;margin-bottom:12px">
-          <button class="btn" id="rt-s" style="flex:1;justify-content:center" onclick="window.setRegRole('student')"><i class="ti ti-user"></i> 학생</button>
-          <button class="btn pri" id="rt-t" style="flex:1;justify-content:center" onclick="window.setRegRole('teacher')"><i class="ti ti-school"></i> 선생님</button>
+
+      <!-- 학생: 학년/반/번호 선택 -->
+      <div id="student-login">
+        <div class="fg">
+          <label>학년</label>
+          <div style="display:flex;gap:6px" id="grade-grid"></div>
         </div>
-        <div class="fg"><label>이름</label><input id="r-name" placeholder="이름 입력"></div>
-        <div class="fg"><label>이메일</label><input id="r-email" type="email" placeholder="이메일 입력"></div>
-        <div class="fg"><label>비밀번호 (6자 이상)</label><input id="r-pw" type="password" placeholder="비밀번호 입력"></div>
-        <div class="fg" id="r-code-wrap">
-          <label>선생님 코드</label>
-          <input id="r-code" placeholder="선생님 등록 코드 입력">
+        <div class="fg">
+          <label>반</label>
+          <div style="display:flex;flex-wrap:wrap;gap:5px" id="class-grid"></div>
         </div>
-        <button class="btn suc" id="btn-register" style="width:100%;justify-content:center;margin-top:4px" onclick="window.doRegister()">
-          <i class="ti ti-user-plus"></i> 회원가입
+        <div class="fg">
+          <label>번호</label>
+          <div style="display:flex;flex-wrap:wrap;gap:5px" id="num-grid"></div>
+        </div>
+        <button class="btn pri" id="btn-enter" style="width:100%;justify-content:center;margin-top:4px" onclick="window.doStudentLogin()">
+          <i class="ti ti-login"></i> 입장하기
         </button>
+      </div>
+
+      <!-- 선생님: 이메일/비밀번호 -->
+      <div id="teacher-login" style="display:none">
+        <div id="tch-form-login">
+          <div class="fg"><label>이메일</label><input id="l-email" type="email" placeholder="이메일 입력"></div>
+          <div class="fg"><label>비밀번호</label><input id="l-pw" type="password" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')window.doLogin()"></div>
+          <button class="btn pri" id="btn-login" style="width:100%;justify-content:center" onclick="window.doLogin()">
+            <i class="ti ti-login"></i> 로그인
+          </button>
+          <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">
+            처음이시면 <span style="color:var(--purple);cursor:pointer" onclick="document.getElementById('tch-form-login').style.display='none';document.getElementById('tch-form-register').style.display='block'">회원가입</span>
+          </p>
+        </div>
+        <div id="tch-form-register" style="display:none">
+          <div class="fg"><label>이름</label><input id="r-name" placeholder="이름 입력"></div>
+          <div class="fg"><label>이메일</label><input id="r-email" type="email" placeholder="이메일 입력"></div>
+          <div class="fg"><label>비밀번호 (6자 이상)</label><input id="r-pw" type="password" placeholder="비밀번호 입력"></div>
+          <div class="fg"><label>선생님 코드</label><input id="r-code" placeholder="선생님 등록 코드 입력"></div>
+          <button class="btn suc" id="btn-register" style="width:100%;justify-content:center" onclick="window.doRegister()">
+            <i class="ti ti-user-plus"></i> 회원가입
+          </button>
+          <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">
+            <span style="color:var(--purple);cursor:pointer" onclick="document.getElementById('tch-form-login').style.display='block';document.getElementById('tch-form-register').style.display='none'">로그인으로 돌아가기</span>
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -328,7 +354,8 @@ const musicMap = new Map();
 let currentUser = null;
 let userProfile = null;
 let selChar = 0;
-let regRole = 'teacher';
+let loginRole = 'student';
+let selGradeVal = 1, selClassVal = 1, selNumVal = 1;
 let unsubscribers = [];
 const audioState = { id: null, timer: null };
 const audio = document.getElementById('audio-player');
@@ -368,40 +395,90 @@ function showLevelUp(lv, imgHtml) {
 }
 window.closeLevelUp = () => document.getElementById('levelup-modal').classList.remove('show');
 
-// 로그인/회원가입 탭
-window.switchAuthTab = function(tab) {
-  const login = tab === 'login';
-  document.getElementById('form-login').style.display    = login ? 'block' : 'none';
-  document.getElementById('form-register').style.display = login ? 'none'  : 'block';
-  document.getElementById('tab-login').classList.toggle('pri', login);
-  document.getElementById('tab-register').classList.toggle('pri', !login);
-  if (!login) window.setRegRole('teacher');
+// 학생/선생님 역할 전환
+window.setLoginRole = function(role) {
+  loginRole = role;
+  document.getElementById('lt-stu').classList.toggle('pri', role === 'student');
+  document.getElementById('lt-tch').classList.toggle('pri', role === 'teacher');
+  document.getElementById('student-login').style.display = role === 'student' ? 'block' : 'none';
+  document.getElementById('teacher-login').style.display = role === 'teacher' ? 'block' : 'none';
 };
 
-window.setRegRole = function(r) {
-  regRole = r;
-  document.getElementById('rt-s').classList.toggle('pri', r === 'student');
-  document.getElementById('rt-t').classList.toggle('pri', r === 'teacher');
-  document.getElementById('r-code-wrap').style.display = r === 'teacher' ? 'block' : 'none';
+// 선택 그리드 생성
+function buildSelGrid(containerId, max, selectedVal, onClickFn) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  for (let i = 1; i <= max; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'btn' + (i === selectedVal ? ' pri' : '');
+    btn.style.cssText = 'padding:4px 0;width:36px;font-size:12px;justify-content:center';
+    btn.textContent = i;
+    btn.dataset.v = i;
+    btn.onclick = () => onClickFn(i);
+    el.appendChild(btn);
+  }
+}
+window.selGrade = function(v) {
+  selGradeVal = v;
+  document.querySelectorAll('#grade-grid .btn').forEach(b => b.classList.toggle('pri', +b.dataset.v === v));
 };
-window.setRegRole('teacher');
+window.selClass = function(v) {
+  selClassVal = v;
+  document.querySelectorAll('#class-grid .btn').forEach(b => b.classList.toggle('pri', +b.dataset.v === v));
+};
+window.selNum = function(v) {
+  selNumVal = v;
+  document.querySelectorAll('#num-grid .btn').forEach(b => b.classList.toggle('pri', +b.dataset.v === v));
+};
+buildSelGrid('grade-grid', 3, 1, window.selGrade);
+buildSelGrid('class-grid', 13, 1, window.selClass);
+buildSelGrid('num-grid', 30, 1, window.selNum);
 
-// 회원가입
+// 학생 입장
+window.doStudentLogin = async function() {
+  const email = `s${selGradeVal}c${selClassVal}n${selNumVal}@music.edu`;
+  const pw = `music${selGradeVal}${String(selClassVal).padStart(2,'0')}${String(selNumVal).padStart(2,'0')}`;
+  const btn = document.getElementById('btn-enter');
+  btn.disabled = true; btn.textContent = '입장 중...';
+  const resetBtn = () => { btn.disabled = false; btn.innerHTML = '<i class="ti ti-login"></i> 입장하기'; };
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+  } catch(e) {
+    if (['auth/user-not-found','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)) {
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pw);
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          uid: cred.user.uid, email,
+          name: `${selGradeVal}학년 ${selClassVal}반 ${selNumVal}번`,
+          grade: selGradeVal, classNum: selClassVal, number: selNumVal,
+          role: 'student', createdAt: serverTimestamp()
+        });
+      } catch(e2) {
+        toast(authErrMsg(e2.code)); resetBtn();
+      }
+    } else {
+      toast(authErrMsg(e.code)); resetBtn();
+    }
+  }
+};
+
+// 선생님 회원가입
 window.doRegister = async function() {
   const name  = document.getElementById('r-name').value.trim();
   const email = document.getElementById('r-email').value.trim();
   const pw    = document.getElementById('r-pw').value;
   const code  = document.getElementById('r-code').value.trim();
-  if (!name)       { toast('이름을 입력하세요'); return; }
-  if (!email)      { toast('이메일을 입력하세요'); return; }
+  if (!name)         { toast('이름을 입력하세요'); return; }
+  if (!email)        { toast('이메일을 입력하세요'); return; }
   if (pw.length < 6) { toast('비밀번호는 6자 이상이어야 합니다'); return; }
-  if (regRole === 'teacher' && code !== TEACHER_CODE) { toast('선생님 코드가 올바르지 않습니다'); return; }
+  if (code !== TEACHER_CODE) { toast('선생님 코드가 올바르지 않습니다'); return; }
   const btn = document.getElementById('btn-register');
   btn.disabled = true; btn.textContent = '처리 중...';
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pw);
     await setDoc(doc(db, 'users', cred.user.uid), {
-      uid: cred.user.uid, email, name, role: regRole, createdAt: serverTimestamp()
+      uid: cred.user.uid, email, name, role: 'teacher', createdAt: serverTimestamp()
     });
     toast('회원가입 완료! ✓');
   } catch(e) {
@@ -410,7 +487,7 @@ window.doRegister = async function() {
   }
 };
 
-// 로그인
+// 선생님 로그인
 window.doLogin = async function() {
   const email = document.getElementById('l-email').value.trim();
   const pw    = document.getElementById('l-pw').value;
