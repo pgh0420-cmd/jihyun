@@ -87,7 +87,7 @@
 <!-- 레벨업 모달 -->
 <div class="modal-overlay" id="levelup-modal" onclick="window.closeLevelUp()">
   <div class="modal-box" onclick="event.stopPropagation()">
-    <span class="modal-sprite" id="lu-sprite">🧙</span>
+    <div class="modal-sprite" id="lu-sprite"></div>
     <h2 style="font-size:20px;font-weight:700;color:var(--purple);margin-top:12px">레벨 업!</h2>
     <p style="font-size:15px;font-weight:600;color:var(--text);margin-top:6px" id="lu-lv">Lv.2 달성!</p>
     <p style="font-size:13px;color:var(--text2);margin-top:6px" id="lu-msg"></p>
@@ -147,17 +147,17 @@
       <p class="section-lv" style="margin-top:4px">캐릭터 선택</p>
       <div class="g3">
         <div class="card char-card sel" id="cc0" onclick="window.pickChar(0)">
-          <span class="char-sprite">👻</span>
+          <img src="유령1.png" style="width:60px;height:60px;object-fit:contain">
           <p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">유령</p>
           <p style="font-size:11px;color:var(--text2)">꼬마 → 유령 → 마법사</p>
         </div>
         <div class="card char-card" id="cc1" onclick="window.pickChar(1)">
-          <span class="char-sprite">🍞</span>
+          <img src="빵1.png" style="width:60px;height:60px;object-fit:contain">
           <p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">빵</p>
           <p style="font-size:11px;color:var(--text2)">찐빵 → 컵케이크 → 케이크</p>
         </div>
         <div class="card char-card" id="cc2" onclick="window.pickChar(2)">
-          <span class="char-sprite">🐙</span>
+          <img src="문어1.png" style="width:60px;height:60px;object-fit:contain">
           <p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">문어</p>
           <p style="font-size:11px;color:var(--text2)">꼬마 → 선원 → 여왕</p>
         </div>
@@ -316,9 +316,9 @@ const db   = getFirestore(app);
 const storage = getStorage(app);
 
 const CHARS = [
-  { sprites: ['👻','👻','🧙'], classes: ['꼬마 유령','유령','마법사 유령'] },
-  { sprites: ['🍞','🧁','🎂'], classes: ['찐빵','컵케이크','케이크'] },
-  { sprites: ['🐙','🐙','🐙'], classes: ['꼬마 문어','선원 문어','여왕 문어'] },
+  { imgs: ['유령1.png','유령2.png','유령3.png'], classes: ['꼬마 유령','유령','마법사 유령'] },
+  { imgs: ['빵1.png','빵2.png','빵3.png'],       classes: ['찐빵','컵케이크','케이크'] },
+  { imgs: ['문어1.png','문어2.png','문어3.png'], classes: ['꼬마 문어','선원 문어','여왕 문어'] },
 ];
 const LV_MSGS  = ['','감상 능력이 향상되었습니다!','진정한 음악 감상가로 성장했습니다!'];
 const LV_THR   = [0, 1000, 3000];
@@ -360,8 +360,8 @@ function authErrMsg(code) {
 }
 
 // 레벨업 모달
-function showLevelUp(lv, sprite) {
-  document.getElementById('lu-sprite').textContent = sprite;
+function showLevelUp(lv, imgHtml) {
+  document.getElementById('lu-sprite').innerHTML = imgHtml;
   document.getElementById('lu-lv').textContent = `Lv.${lv} 달성!`;
   document.getElementById('lu-msg').textContent = LV_MSGS[lv - 1] || '';
   document.getElementById('levelup-modal').classList.add('show');
@@ -482,7 +482,7 @@ function setupStudent() {
     const p = snap.data();
     const oldLv = userProfile.lv || 1;
     userProfile = p; renderStats(p);
-    if ((p.lv || 1) > oldLv) showLevelUp(p.lv, charSprite(p));
+    if ((p.lv || 1) > oldLv) showLevelUp(p.lv, charImg(p, '60px'));
   }));
   const q = query(collection(db, 'reviews'), where('studentUid','==',currentUser.uid));
   unsubscribers.push(onSnapshot(q, snap => {
@@ -512,16 +512,17 @@ function setupStudent() {
   }));
 }
 
-function charSprite(p) {
+function charImg(p, size='60px') {
   const ch = CHARS[p.charIdx ?? 0];
-  return ch ? ch.sprites[Math.min((p.lv||1)-1, 2)] : '👻';
+  const src = ch ? ch.imgs[Math.min((p.lv||1)-1, 2)] : '유령1.png';
+  return `<img src="${src}" style="width:${size};height:${size};object-fit:contain">`;
 }
 function charClass(p) {
   const ch = CHARS[p.charIdx ?? 0];
   return ch ? ch.classes[Math.min((p.lv||1)-1, 2)] : '—';
 }
 function renderStats(p) {
-  document.getElementById('st-sprite').textContent = charSprite(p);
+  document.getElementById('st-sprite').innerHTML = charImg(p, '80px');
   document.getElementById('st-cname').textContent  = p.charName || p.name;
   document.getElementById('st-class').textContent  = charClass(p);
   document.getElementById('st-badge').textContent  = p.charName || p.name;
@@ -559,7 +560,7 @@ window.submitRv = async function() {
   await addDoc(collection(db,'reviews'), {
     studentUid: currentUser.uid,
     studentName: userProfile.charName || userProfile.name,
-    studentSprite: charSprite(userProfile),
+    studentSprite: CHARS[userProfile.charIdx??0]?.imgs[Math.min((userProfile.lv||1)-1,2)] || '유령1.png',
     musicId: sel.value, musicName, title, content: txt,
     submittedAt: serverTimestamp(), graded: false, score: null, feedback: null
   });
@@ -589,7 +590,7 @@ function setupTeacher() {
       ? '<p class="empty">아직 제출된 감상문이 없습니다.</p>'
       : all.slice(0,5).map(r => `
           <div class="srow">
-            <span style="font-size:24px">${r.studentSprite}</span>
+            <img src="${r.studentSprite}" style="width:36px;height:36px;object-fit:contain">
             <div style="flex:1">
               <p style="font-size:13px;font-weight:500;color:var(--text)">${r.studentName}</p>
               <p style="font-size:11px;color:var(--text2)">${r.musicName} · ${r.title}</p>
@@ -655,7 +656,7 @@ async function loadGradeList() {
     : list.map(r => `
         <div id="gi-${r.id}" style="border-left:2px solid var(--purple);padding-left:12px;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <span style="font-size:22px">${r.studentSprite}</span>
+            <img src="${r.studentSprite}" style="width:36px;height:36px;object-fit:contain">
             <div>
               <p style="font-size:13px;font-weight:500;color:var(--text)">${r.studentName} — ${r.musicName}</p>
               <p style="font-size:11px;color:var(--text2)">제목: ${r.title}</p>
@@ -707,7 +708,7 @@ async function loadStuList() {
         const pc=Math.min(Math.round((exp-base)/(next-base)*100),100);
         return `
           <div class="srow">
-            <span style="font-size:26px">${CHARS[s.charIdx??0]?.sprites[Math.min((s.lv||1)-1,2)]||'👻'}</span>
+            <img src="${CHARS[s.charIdx??0]?.imgs[Math.min((s.lv||1)-1,2)]||'유령1.png'}" style="width:40px;height:40px;object-fit:contain">
             <div style="flex:1">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
                 <p style="font-size:13px;font-weight:500;color:var(--text)">${s.charName||s.name}</p>
