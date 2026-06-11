@@ -95,6 +95,27 @@
   </div>
 </div>
 
+<!-- 감상문 상세 모달 -->
+<div class="modal-overlay" id="review-modal" onclick="window.closeReviewModal()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:420px;width:92%;text-align:left;padding:1.2rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <div>
+        <p style="font-weight:600;font-size:15px;color:var(--text)" id="rm-title"></p>
+        <p style="font-size:11px;color:var(--text2);margin-top:2px" id="rm-meta"></p>
+      </div>
+      <button class="btn" style="padding:4px 8px;margin-left:8px;flex-shrink:0" onclick="window.closeReviewModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="background:var(--bg3);padding:10px 12px;border-radius:var(--radius);font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap;margin-bottom:10px;max-height:220px;overflow-y:auto" id="rm-content"></div>
+    <div id="rm-grade-box" style="display:none;background:var(--green-light);padding:10px 12px;border-radius:var(--radius)">
+      <p style="font-size:13px;font-weight:600;color:var(--green-text)" id="rm-score"></p>
+      <p style="font-size:12px;color:var(--text);margin-top:4px;white-space:pre-wrap" id="rm-feedback"></p>
+    </div>
+    <div id="rm-ungraded" style="display:none;background:var(--amber-light);padding:8px 12px;border-radius:var(--radius)">
+      <p style="font-size:12px;color:var(--amber-text)">아직 채점되지 않은 감상문입니다.</p>
+    </div>
+  </div>
+</div>
+
 <!-- 로그인 -->
 <div id="page-login" class="screen active">
   <div style="max-width:420px;margin:32px auto;padding:0 1rem">
@@ -395,6 +416,26 @@ function showLevelUp(lv, imgHtml) {
 }
 window.closeLevelUp = () => document.getElementById('levelup-modal').classList.remove('show');
 
+// 감상문 상세 모달
+const reviewMap = new Map();
+window.openReviewModal = function(id) {
+  const r = reviewMap.get(id); if (!r) return;
+  document.getElementById('rm-title').textContent   = r.title;
+  document.getElementById('rm-meta').textContent    = `${r.studentName} · ${r.musicName}`;
+  document.getElementById('rm-content').textContent = r.content;
+  const gradeBox   = document.getElementById('rm-grade-box');
+  const ungradedBox = document.getElementById('rm-ungraded');
+  if (r.graded && r.score !== null) {
+    document.getElementById('rm-score').textContent    = `점수: ${r.score}점`;
+    document.getElementById('rm-feedback').textContent = r.feedback || '(피드백 없음)';
+    gradeBox.style.display = 'block'; ungradedBox.style.display = 'none';
+  } else {
+    gradeBox.style.display = 'none'; ungradedBox.style.display = 'block';
+  }
+  document.getElementById('review-modal').classList.add('show');
+};
+window.closeReviewModal = () => document.getElementById('review-modal').classList.remove('show');
+
 // 학생/선생님 역할 전환
 window.setLoginRole = function(role) {
   loginRole = role;
@@ -570,13 +611,17 @@ function setupStudent() {
     const graded = reviews.filter(r => r.graded);
     document.getElementById('st-avg').textContent = graded.length
       ? Math.round(graded.reduce((a,b) => a+b.score,0) / graded.length) + '점' : '—';
+    reviews.forEach(r => reviewMap.set(r.id, r));
     const el = document.getElementById('score-history');
     el.innerHTML = graded.length === 0
       ? '<p class="empty">채점된 감상문이 없습니다.</p>'
       : graded.slice(0,5).map(r => `
-          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:12px">
-            <span style="color:var(--text2)">${r.musicName}</span>
-            <span class="badge" style="background:var(--amber-light);color:var(--amber-text)">${r.score}점</span>
+          <div onclick="window.openReviewModal('${r.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:0.5px solid var(--border);font-size:12px;cursor:pointer">
+            <div>
+              <span style="color:var(--text)">${r.title}</span>
+              <span style="color:var(--text3);margin-left:6px">${r.musicName}</span>
+            </div>
+            <span class="badge" style="background:var(--amber-light);color:var(--amber-text);flex-shrink:0">${r.score}점</span>
           </div>`).join('');
   }));
   unsubscribers.push(onSnapshot(collection(db,'music'), snap => {
@@ -694,11 +739,12 @@ function setupTeacher() {
   unsubscribers.push(onSnapshot(query(collection(db,'reviews'), orderBy('submittedAt','desc')), snap => {
     const all = snap.docs.map(d => ({id:d.id,...d.data()}));
     document.getElementById('tc-ungraded').textContent = all.filter(r => !r.graded).length;
+    all.forEach(r => reviewMap.set(r.id, r));
     const el = document.getElementById('tc-recent-list');
     el.innerHTML = all.length === 0
       ? '<p class="empty">아직 제출된 감상문이 없습니다.</p>'
       : all.slice(0,5).map(r => `
-          <div class="srow">
+          <div class="srow" onclick="window.openReviewModal('${r.id}')" style="cursor:pointer">
             ${spriteHtml(r.studentSprite,'36px')}
             <div style="flex:1">
               <p style="font-size:13px;font-weight:500;color:var(--text)">${r.studentName}</p>
