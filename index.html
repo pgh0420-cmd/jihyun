@@ -777,7 +777,7 @@ async function loadStuList() {
   const el = document.getElementById('tc-stu-list');
   el.innerHTML = '<p class="loading-txt">로딩 중...</p>';
   const snap = await getDocs(query(collection(db,'users'), where('role','==','student')));
-  const students = snap.docs.map(d => d.data()).filter(s => s.sprite);
+  const students = snap.docs.map(d => d.data()).filter(s => s.charIdx !== undefined && s.charIdx !== null);
   el.innerHTML = students.length === 0
     ? '<p class="empty">등록된 학생이 없습니다.</p>'
     : students.map(s => {
