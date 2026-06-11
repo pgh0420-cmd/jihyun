@@ -595,6 +595,13 @@ function charImg(p, size='60px') {
   const src = ch ? ch.imgs[Math.min((p.lv||1)-1, 2)] : '유령1.png';
   return `<img src="${src}" style="width:${size};height:${size};object-fit:contain">`;
 }
+// 감상문에 저장된 sprite가 이모지(구버전)일 수도 있어서 분기 처리
+function spriteHtml(sprite, size='36px') {
+  if (sprite && sprite.endsWith('.png')) {
+    return `<img src="${sprite}" style="width:${size};height:${size};object-fit:contain">`;
+  }
+  return `<span style="font-size:${size};line-height:1;display:inline-block">${sprite || '🧙'}</span>`;
+}
 function charClass(p) {
   const ch = CHARS[p.charIdx ?? 0];
   return ch ? ch.classes[Math.min((p.lv||1)-1, 2)] : '—';
@@ -668,7 +675,7 @@ function setupTeacher() {
       ? '<p class="empty">아직 제출된 감상문이 없습니다.</p>'
       : all.slice(0,5).map(r => `
           <div class="srow">
-            <img src="${r.studentSprite}" style="width:36px;height:36px;object-fit:contain">
+            ${spriteHtml(r.studentSprite,'36px')}
             <div style="flex:1">
               <p style="font-size:13px;font-weight:500;color:var(--text)">${r.studentName}</p>
               <p style="font-size:11px;color:var(--text2)">${r.musicName} · ${r.title}</p>
@@ -734,7 +741,7 @@ async function loadGradeList() {
     : list.map(r => `
         <div id="gi-${r.id}" style="border-left:2px solid var(--purple);padding-left:12px;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <img src="${r.studentSprite}" style="width:36px;height:36px;object-fit:contain">
+            ${spriteHtml(r.studentSprite,'36px')}
             <div>
               <p style="font-size:13px;font-weight:500;color:var(--text)">${r.studentName} — ${r.musicName}</p>
               <p style="font-size:11px;color:var(--text2)">제목: ${r.title}</p>
