@@ -657,9 +657,33 @@ window.submitRv = async function() {
   toast('감상문이 제출되었습니다! 📨 (+30 EXP)');
 };
 
+// 이전 감상문의 이모지 sprite → PNG 파일명으로 일괄 업데이트
+async function migrateLegacySprites() {
+  const rSnap = await getDocs(collection(db, 'reviews'));
+  const toFix = rSnap.docs.filter(d => {
+    const s = d.data().studentSprite;
+    return !s || !s.endsWith('.png');
+  });
+  if (!toFix.length) return;
+  const uids = [...new Set(toFix.map(d => d.data().studentUid).filter(Boolean))];
+  const profileMap = {};
+  await Promise.all(uids.map(async uid => {
+    const u = await getDocs(query(collection(db,'users'), where('uid','==',uid)));
+    if (!u.empty) profileMap[uid] = u.docs[0].data();
+  }));
+  await Promise.all(toFix.map(d => {
+    const r = d.data();
+    const p = profileMap[r.studentUid];
+    if (!p || p.charIdx === undefined) return;
+    const sprite = CHARS[p.charIdx]?.imgs[Math.min((p.lv||1)-1,2)] || '유령1.png';
+    return updateDoc(doc(db,'reviews',d.id), { studentSprite: sprite });
+  }));
+}
+
 // ── 선생님 ──
 function setupTeacher() {
   showPage('teacher');
+  migrateLegacySprites();
   unsubscribers.push(onSnapshot(query(collection(db,'users'), where('role','==','student')), snap => {
     document.getElementById('tc-stucount').textContent = snap.size;
   }));
