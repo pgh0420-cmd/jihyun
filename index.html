@@ -146,12 +146,21 @@
       <div class="fg"><label>캐릭터 이름</label><input id="cname" placeholder="캐릭터 이름 입력"></div>
       <p class="section-lv" style="margin-top:4px">캐릭터 선택</p>
       <div class="g3">
-        <div class="card char-card sel" id="cc0" onclick="window.pickChar(0)"><span class="char-sprite">🧙</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">음악 마법사</p><p style="font-size:11px;color:var(--text2)">마법의 선율</p></div>
-        <div class="card char-card" id="cc1" onclick="window.pickChar(1)"><span class="char-sprite">🎸</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">록 전사</p><p style="font-size:11px;color:var(--text2)">강렬한 리듬</p></div>
-        <div class="card char-card" id="cc2" onclick="window.pickChar(2)"><span class="char-sprite">🎻</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">바이올린 요정</p><p style="font-size:11px;color:var(--text2)">우아한 음율</p></div>
-        <div class="card char-card" id="cc3" onclick="window.pickChar(3)"><span class="char-sprite">🥁</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">드럼 용사</p><p style="font-size:11px;color:var(--text2)">박동하는 심장</p></div>
-        <div class="card char-card" id="cc4" onclick="window.pickChar(4)"><span class="char-sprite">🎹</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">피아노 현자</p><p style="font-size:11px;color:var(--text2)">조화의 건반</p></div>
-        <div class="card char-card" id="cc5" onclick="window.pickChar(5)"><span class="char-sprite">🎷</span><p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">재즈 유랑자</p><p style="font-size:11px;color:var(--text2)">자유로운 즉흥</p></div>
+        <div class="card char-card sel" id="cc0" onclick="window.pickChar(0)">
+          <span class="char-sprite">👻</span>
+          <p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">유령</p>
+          <p style="font-size:11px;color:var(--text2)">꼬마 → 유령 → 마법사</p>
+        </div>
+        <div class="card char-card" id="cc1" onclick="window.pickChar(1)">
+          <span class="char-sprite">🍞</span>
+          <p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">빵</p>
+          <p style="font-size:11px;color:var(--text2)">찐빵 → 컵케이크 → 케이크</p>
+        </div>
+        <div class="card char-card" id="cc2" onclick="window.pickChar(2)">
+          <span class="char-sprite">🐙</span>
+          <p style="font-size:12px;font-weight:500;margin-top:6px;color:var(--text)">문어</p>
+          <p style="font-size:11px;color:var(--text2)">꼬마 → 선원 → 여왕</p>
+        </div>
       </div>
       <button class="btn pri" style="width:100%;justify-content:center;margin-top:1rem" onclick="window.createChar()">
         <i class="ti ti-check"></i> 생성하기
@@ -306,8 +315,11 @@ const auth = getAuth(app);
 const db   = getFirestore(app);
 const storage = getStorage(app);
 
-const SPRITES = ['🧙','🎸','🎻','🥁','🎹','🎷'];
-const CLASSES  = ['음악 마법사','록 전사','바이올린 요정','드럼 용사','피아노 현자','재즈 유랑자'];
+const CHARS = [
+  { sprites: ['👻','👻','🧙'], classes: ['꼬마 유령','유령','마법사 유령'] },
+  { sprites: ['🍞','🧁','🎂'], classes: ['찐빵','컵케이크','케이크'] },
+  { sprites: ['🐙','🐙','🐙'], classes: ['꼬마 문어','선원 문어','여왕 문어'] },
+];
 const LV_MSGS  = ['','감상 능력이 향상되었습니다!','진정한 음악 감상가로 성장했습니다!'];
 const LV_THR   = [0, 1000, 3000];
 const TEACHER_CODE = 'MUSIC2024';
@@ -435,7 +447,7 @@ onAuthStateChanged(auth, async user => {
   if (userProfile.role === 'teacher') {
     setupTeacher();
   } else {
-    if (!userProfile.sprite) {
+    if (userProfile.charIdx === undefined || userProfile.charIdx === null) {
       document.getElementById('cname').value = userProfile.name || '';
       showPage('char');
     } else {
@@ -454,9 +466,9 @@ window.pickChar = function(idx) {
 window.createChar = async function() {
   const nm = document.getElementById('cname').value.trim() || userProfile.name;
   await updateDoc(doc(db, 'users', currentUser.uid), {
-    charName: nm, sprite: SPRITES[selChar], charClass: CLASSES[selChar], lv: 1, exp: 0
+    charName: nm, charIdx: selChar, lv: 1, exp: 0
   });
-  userProfile = { ...userProfile, charName: nm, sprite: SPRITES[selChar], charClass: CLASSES[selChar], lv: 1, exp: 0 };
+  userProfile = { ...userProfile, charName: nm, charIdx: selChar, lv: 1, exp: 0 };
   toast('캐릭터 생성 완료! 🎉');
   setupStudent();
 };
@@ -470,7 +482,7 @@ function setupStudent() {
     const p = snap.data();
     const oldLv = userProfile.lv || 1;
     userProfile = p; renderStats(p);
-    if ((p.lv || 1) > oldLv) showLevelUp(p.lv, p.sprite);
+    if ((p.lv || 1) > oldLv) showLevelUp(p.lv, charSprite(p));
   }));
   const q = query(collection(db, 'reviews'), where('studentUid','==',currentUser.uid));
   unsubscribers.push(onSnapshot(q, snap => {
@@ -500,10 +512,18 @@ function setupStudent() {
   }));
 }
 
+function charSprite(p) {
+  const ch = CHARS[p.charIdx ?? 0];
+  return ch ? ch.sprites[Math.min((p.lv||1)-1, 2)] : '👻';
+}
+function charClass(p) {
+  const ch = CHARS[p.charIdx ?? 0];
+  return ch ? ch.classes[Math.min((p.lv||1)-1, 2)] : '—';
+}
 function renderStats(p) {
-  document.getElementById('st-sprite').textContent = p.sprite || '🧙';
+  document.getElementById('st-sprite').textContent = charSprite(p);
   document.getElementById('st-cname').textContent  = p.charName || p.name;
-  document.getElementById('st-class').textContent  = p.charClass || '—';
+  document.getElementById('st-class').textContent  = charClass(p);
   document.getElementById('st-badge').textContent  = p.charName || p.name;
   const lv = p.lv||1; const exp = p.exp||0;
   document.getElementById('st-lv').textContent = lv;
@@ -539,7 +559,7 @@ window.submitRv = async function() {
   await addDoc(collection(db,'reviews'), {
     studentUid: currentUser.uid,
     studentName: userProfile.charName || userProfile.name,
-    studentSprite: userProfile.sprite || '🎵',
+    studentSprite: charSprite(userProfile),
     musicId: sel.value, musicName, title, content: txt,
     submittedAt: serverTimestamp(), graded: false, score: null, feedback: null
   });
@@ -687,7 +707,7 @@ async function loadStuList() {
         const pc=Math.min(Math.round((exp-base)/(next-base)*100),100);
         return `
           <div class="srow">
-            <span style="font-size:26px">${s.sprite}</span>
+            <span style="font-size:26px">${CHARS[s.charIdx??0]?.sprites[Math.min((s.lv||1)-1,2)]||'👻'}</span>
             <div style="flex:1">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
                 <p style="font-size:13px;font-weight:500;color:var(--text)">${s.charName||s.name}</p>
