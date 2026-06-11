@@ -616,12 +616,13 @@ function setupStudent() {
     el.innerHTML = graded.length === 0
       ? '<p class="empty">채점된 감상문이 없습니다.</p>'
       : graded.slice(0,5).map(r => `
-          <div onclick="window.openReviewModal('${r.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:0.5px solid var(--border);font-size:12px;cursor:pointer">
-            <div>
-              <span style="color:var(--text)">${r.title}</span>
-              <span style="color:var(--text3);margin-left:6px">${r.musicName}</span>
+          <div onclick="window.openReviewModal('${r.id}')" style="padding:9px 4px;border-bottom:0.5px solid var(--border);cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:12px;font-weight:500;color:var(--text)">${r.title}</span>
+              <span class="badge" style="background:var(--amber-light);color:var(--amber-text);flex-shrink:0">${r.score}점</span>
             </div>
-            <span class="badge" style="background:var(--amber-light);color:var(--amber-text);flex-shrink:0">${r.score}점</span>
+            <p style="font-size:11px;color:var(--text2);margin-bottom:${r.feedback?'4px':'0'}">${r.musicName}</p>
+            ${r.feedback ? `<p style="font-size:11px;color:var(--purple);background:var(--purple-light);padding:4px 8px;border-radius:4px">💬 ${r.feedback}</p>` : ''}
           </div>`).join('');
   }));
   unsubscribers.push(onSnapshot(collection(db,'music'), snap => {
