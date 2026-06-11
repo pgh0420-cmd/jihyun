@@ -190,10 +190,6 @@
             </div>
             <div class="xp-bar"><div class="xp-fill" id="st-xpfill" style="width:0%"></div></div>
           </div>
-          <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
-            <span class="badge" style="background:var(--purple-light);color:var(--purple-text)">공격력 <span id="st-atk">10</span></span>
-            <span class="badge" style="background:var(--teal-light);color:var(--teal-text)">방어력 <span id="st-def">8</span></span>
-          </div>
         </div>
         <div>
           <div class="g2" style="margin-bottom:10px">
@@ -518,8 +514,6 @@ function renderStats(p) {
   document.getElementById('st-expmax').textContent = range;
   document.getElementById('st-exppc').textContent  = pc;
   document.getElementById('st-xpfill').style.width = pc + '%';
-  document.getElementById('st-atk').textContent = 10+(lv-1)*15;
-  document.getElementById('st-def').textContent = 8 +(lv-1)*12;
 }
 
 window.stTab = function(tab, el) {
