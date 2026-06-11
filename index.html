@@ -169,6 +169,7 @@
   </div>
   <div style="max-width:500px;margin:1.5rem auto;padding:0 1rem">
     <div class="card">
+      <div class="fg"><label>본인 이름</label><input id="realname" placeholder="실제 이름 입력 (예: 홍길동)"></div>
       <div class="fg"><label>캐릭터 이름</label><input id="cname" placeholder="캐릭터 이름 입력"></div>
       <p class="section-lv" style="margin-top:4px">캐릭터 선택</p>
       <div class="g3">
@@ -525,7 +526,8 @@ onAuthStateChanged(auth, async user => {
     setupTeacher();
   } else {
     if (userProfile.charIdx === undefined || userProfile.charIdx === null) {
-      document.getElementById('cname').value = userProfile.name || '';
+      document.getElementById('realname').value = '';
+      document.getElementById('cname').value = '';
       showPage('char');
     } else {
       setupStudent();
@@ -541,11 +543,14 @@ window.pickChar = function(idx) {
 
 // 캐릭터 생성
 window.createChar = async function() {
-  const nm = document.getElementById('cname').value.trim() || userProfile.name;
+  const realName = document.getElementById('realname').value.trim();
+  const nm = document.getElementById('cname').value.trim();
+  if (!realName) { toast('본인 이름을 입력하세요'); return; }
+  if (!nm)       { toast('캐릭터 이름을 입력하세요'); return; }
   await updateDoc(doc(db, 'users', currentUser.uid), {
-    charName: nm, charIdx: selChar, lv: 1, exp: 0
+    name: realName, charName: nm, charIdx: selChar, lv: 1, exp: 0
   });
-  userProfile = { ...userProfile, charName: nm, charIdx: selChar, lv: 1, exp: 0 };
+  userProfile = { ...userProfile, name: realName, charName: nm, charIdx: selChar, lv: 1, exp: 0 };
   toast('캐릭터 생성 완료! 🎉');
   setupStudent();
 };
